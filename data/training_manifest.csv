@@ -1,0 +1,5 @@
+image_path,plant_label,disease_label
+C:\Users\moham\Desktop\paid project\plant_disease_detection\Dataset\Train\Potato___Healthy\sample1.jpg,potato,healthy
+C:\Users\moham\Desktop\paid project\plant_disease_detection\Dataset\Train\Potato___Rust\sample2.jpg,potato,rust
+C:\Users\moham\Desktop\paid project\plant_disease_detection\Dataset\Train\Tomato___Early_blight\sample3.jpg,tomato,early_blight
+C:\Users\moham\Desktop\paid project\plant_disease_detection\Dataset\Train\Tomato___Healthy\sample4.jpg,tomato,healthy

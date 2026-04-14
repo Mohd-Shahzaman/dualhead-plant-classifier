@@ -1,0 +1,13 @@
+Flask
+numpy
+opencv-python
+Pillow
+tensorflow
+keras
+IPython
+scipy
+matplotlib
+seaborn
+scikit-learn
+pandas
+flask-login

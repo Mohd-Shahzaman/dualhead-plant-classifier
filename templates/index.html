@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agro-AI | Neural Diagnostics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-page: #FAF9F6;
+            --bg-surface: #FFFFFF;
+            --text-primary: #111111;
+            --text-secondary: #555555;
+            --border-color: #E2E2E2;
+            --accent-brand: #2B4C3B;
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --font-sm: 0.875rem;
+            --font-base: 1rem;
+            --font-lg: 1.25rem;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            width: 100%;
+        }
+
+        /* --- Navigation --- */
+        nav {
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .brand {
+            font-weight: 600;
+            font-size: var(--font-lg);
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-brand);
+            border-radius: 50%;
+        }
+
+        .nav-actions {
+            font-size: var(--font-sm);
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        /* --- Main Layout --- */
+        .workspace {
+            padding: 4rem 0;
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 3rem;
+            transition: 0.5s ease;
+        }
+
+        .workspace.results-active {
+            grid-template-columns: 450px 1fr;
+        }
+
+        @media (max-width: 900px) {
+            .workspace.results-active {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* --- Upload / Input Panel --- */
+        .panel {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 2.5rem;
+        }
+
+        .panel-header {
+            margin-bottom: 2rem;
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+        }
+
+        .panel-desc {
+            color: var(--text-secondary);
+            font-size: var(--font-sm);
+        }
+
+        .upload-zone {
+            border: 1px dashed var(--text-secondary);
+            border-radius: var(--radius-sm);
+            padding: 4rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg-page);
+        }
+
+        .upload-zone:hover {
+            border-color: var(--text-primary);
+            background: #F4F4F4;
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        /* Preview State */
+        .preview-area {
+            display: none;
+        }
+
+        .img-wrapper {
+            width: 100%;
+            height: 350px;
+            background: var(--bg-page);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* Minimal Scanning line */
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-brand);
+            display: none;
+            box-shadow: 0 2px 10px rgba(43, 76, 59, 0.4);
+        }
+
+        @keyframes scan {
+            0% {
+                top: 0;
+            }
+
+            50% {
+                top: 100%;
+            }
+
+            100% {
+                top: 0;
+            }
+        }
+
+        .btn-primary {
+            width: 100%;
+            background-color: var(--text-primary);
+            color: #fff;
+            border: none;
+            padding: 1rem;
+            font-size: var(--font-sm);
+            font-weight: 500;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: #333;
+        }
+
+        .btn-primary:disabled {
+            background-color: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: var(--font-sm);
+            text-decoration: underline;
+            cursor: pointer;
+            margin-top: 1rem;
+            display: block;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* --- Results Panel --- */
+        .results-panel {
+            display: none;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-box {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .metric-box.alert {
+            border-top: 3px solid #D9381E;
+        }
+
+        .metric-box.safe {
+            border-top: 3px solid var(--accent-brand);
+        }
+
+        .m-label {
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .m-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        /* Progress visually stripped down */
+        .conf-track {
+            height: 4px;
+            background: var(--border-color);
+            width: 100%;
+        }
+
+        .conf-fill {
+            height: 100%;
+            background: var(--text-primary);
+            width: 0%;
+            transition: 1s ease-in-out;
+        }
+
+        .metric-box.alert .conf-fill {
+            background: #D9381E;
+        }
+
+        .conf-text {
+            font-size: 0.75rem;
+            margin-top: 6px;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Report area */
+        .report-section {
+            border-top: 1px solid var(--border-color);
+            padding-top: 2rem;
+        }
+
+        .report-title {
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .r-item {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .r-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .r-header {
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .r-body {
+            font-size: 1.05rem;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="container nav-inner">
+            <a href="/" class="brand">
+                <span class="brand-dot"></span> Agro-AI Diagnostics
+            </a>
+            <div class="nav-actions">
+                <span style="font-size:0.8rem; color:var(--text-secondary);">{{ user_email }}</span>
+                <a href="/logout"
+                    style="font-size:0.8rem; color:var(--text-secondary); text-decoration:none; font-weight:500; border:1px solid var(--border-color); padding:0.4rem 0.8rem; border-radius:4px; margin-left:0.75rem;">Sign
+                    Out</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container workspace" id="workspace">
+
+        <!-- Left: Upload / Specimen -->
+        <div class="panel">
+            <div class="panel-header">
+                <h1 class="panel-title">Diagnostic Input</h1>
+                <p class="panel-desc">Upload a pristine leaf specimen for taxonomic and pathological inference.</p>
+            </div>
+
+            <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileIn').click()">
+                <i class="fa-solid fa-arrow-up-from-bracket upload-icon"></i>
+                <div style="font-weight: 500; margin-bottom: 4px;">Select Image</div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">JPG, PNG under 10MB</div>
+                <input type="file" id="fileIn" accept="image/*" style="display:none">
+            </div>
+
+            <div class="preview-area" id="previewArea">
+                <div class="img-wrapper">
+                    <div class="scan-line" id="scanLine"></div>
+                    <img id="imgView" src="#" alt="Specimen">
+                </div>
+                <button class="btn-primary" id="btnAnalyze">Run Neural Inference</button>
+                <button class="btn-secondary" id="btnClear">Discard Specimen</button>
+            </div>
+        </div>
+
+        <!-- Right: Deterministic Report -->
+        <div class="panel results-panel" id="resultsPnl">
+            <div class="panel-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem;">
+                <h1 class="panel-title">Inference Report</h1>
+                <p class="panel-desc">Deterministic outputs driven by Agro-AI Core CNN.</p>
+            </div>
+
+            <div class="metrics-grid">
+                <div class="metric-box safe" id="boxPlant">
+                    <div class="m-label">Selected Taxonomy</div>
+                    <div class="m-value" id="resPlant">--</div>
+                    <div class="conf-track">
+                        <div class="conf-fill" id="fillPlant"></div>
+                    </div>
+                    <div class="conf-text"><span>Confidence Interval</span><span id="txtPlantConf">0%</span></div>
+                </div>
+
+                <div class="metric-box" id="boxDisease">
+                    <div class="m-label">Pathological State</div>
+                    <div class="m-value" id="resDisease">--</div>
+                    <div class="conf-track">
+                        <div class="conf-fill" id="fillDisease"></div>
+                    </div>
+                    <div class="conf-text"><span>Confidence Interval</span><span id="txtDiseaseConf">0%</span></div>
+                </div>
+            </div>
+
+            <div class="report-section">
+                <div class="report-title">Remediation Matrix</div>
+
+                <div class="r-item">
+                    <div class="r-header">Primary Recommendation</div>
+                    <div class="r-body" id="recPrimary">Awaiting data...</div>
+                </div>
+
+                <div class="r-item">
+                    <div class="r-header">Organic Pathway</div>
+                    <div class="r-body" id="recOrganic">Awaiting data...</div>
+                </div>
+
+                <div class="r-item">
+                    <div class="r-header">Chemical Pathway</div>
+                    <div class="r-body" id="recChem">Awaiting data...</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+
+        $(document).ready(function () {
+
+            // Upload Handler
+            $("#fileIn").change(function () {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        $('#imgView').attr('src', e.target.result);
+                        $('#dropZone').hide();
+                        $('#previewArea').fadeIn();
+
+                        // Reset View
+                        $('#workspace').removeClass('results-active');
+                        $('#resultsPnl').hide();
+                        $('#btnAnalyze').prop('disabled', false).text('Run Neural Inference');
+                        $('.conf-fill').css('width', '0%');
+                    }
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+
+            // Clear Handler
+            $("#btnClear").click(function () {
+                $('#fileIn').val('');
+                $('#previewArea').hide();
+                $('#dropZone').fadeIn();
+                $('#workspace').removeClass('results-active');
+                $('#resultsPnl').hide();
+            });
+
+            // Analyze
+            $("#btnAnalyze").click(function () {
+                const file = $('#fileIn')[0].files[0];
+                if (!file) return;
+
+                const fd = new FormData();
+                fd.append('file', file);
+
+                const $btn = $(this);
+                $btn.prop('disabled', true).text('Processing Tensor Data...');
+                $('#scanLine').show().css('animation', 'scan 1.5s infinite ease-in-out');
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/predict',
+                    data: fd,
+                    processData: false,
+                    contentType: false,
+                    timeout: 60000,
+                    success: function (data) {
+                        $('#scanLine').hide().css('animation', 'none');
+                        $btn.text('Inference Complete');
+
+                        if (data.status === "success") {
+                            $('#workspace').addClass('results-active');
+
+                            const pName = data.prediction.plant.replace(/_/g, ' ').toUpperCase();
+                            const dName = data.prediction.disease.replace(/_/g, ' ').toUpperCase();
+                            const pConf = parseFloat(data.prediction.plant_conf);
+                            const dConf = parseFloat(data.prediction.disease_conf);
+
+                            $('#resPlant').text(pName);
+                            $('#resDisease').text(dName);
+                            $('#txtPlantConf').text(data.prediction.plant_conf);
+                            $('#txtDiseaseConf').text(data.prediction.disease_conf);
+
+                            if (dName.includes('HEALTHY')) {
+                                $('#boxDisease').removeClass('alert').addClass('safe');
+                            } else {
+                                $('#boxDisease').removeClass('safe').addClass('alert');
+                            }
+
+                            $('#recPrimary').text(data.treatment.recommendation || "No data");
+                            $('#recOrganic').text(data.treatment.organic || "No data");
+                            $('#recChem').text(data.treatment.chemical || "No data");
+
+                            setTimeout(() => {
+                                $('#resultsPnl').fadeIn(300);
+                                setTimeout(() => {
+                                    $('#fillPlant').css('width', pConf + '%');
+                                    $('#fillDisease').css('width', dConf + '%');
+                                }, 100);
+                            }, 300);
+
+                        } else {
+                            alert("System Error: " + data.message);
+                            $btn.prop('disabled', false).text('Retry Inference');
+                        }
+                    },
+                    error: function (err) {
+                        $('#scanLine').hide();
+                        $btn.prop('disabled', false).text('Retry Inference');
+                        alert("API Exception occurred. Check server payload.");
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
